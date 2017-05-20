@@ -74,7 +74,6 @@ def parse_assignments(assignments):
 # the google drive files
 # Can and should be improved to deal with multiple submissions to a single assignment
 def parse_submissions(submissions, classroom_service):
-    def parse_submissions(submissions, classroom_service):
     final = []
     submissions = submissions.get('studentSubmissions')
     for assignment in submissions:
@@ -117,14 +116,12 @@ def parse_link(link):
 # Add support for docs/slides/sheets files with .export()
 def download_file(drive_service, name, file_id):
     counter = 1
-    print('file_id =', file_id)
     for file in file_id:
         if len(file_id) > 1:
             temp_name = name + ' ' + str(counter)
         else:
             temp_name = name
 
-        print('file =', file)
         data = drive_service.files().get_media(fileId=file).execute()
         with open(temp_name, "wb") as current_file:
             current_file.write(data)
