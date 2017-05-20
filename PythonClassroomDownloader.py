@@ -83,8 +83,9 @@ def parse_submissions(submissions, classroom_service):
         title = parse_id(assignment.get('userId'), classroom_service)
         if type(temp) is dict:
             temp = temp.get('attachments')
-            for driveFile in temp:
-                link.append(parse_link(driveFile.get('driveFile').get('alternateLink')))
+            if temp:
+                for driveFile in temp:
+                    link.append(parse_link(driveFile.get('driveFile').get('alternateLink')))
         final.append([title, link])
     return final
     
@@ -177,7 +178,7 @@ def main():
     print('\nParsing submissions...')
     submissions = parse_submissions(classroom_service.courses().courseWork().studentSubmissions().list(courseId=courseid, courseWorkId=assignmentid).execute(), classroom_service)
     for work in submissions:
-    # Look into making a better loading screen? Percentage instead of notifying when all are done?
+        # Look into making a better loading screen? Percentage instead of notifying when all are done?
         print('Downloading ' + work[0])
         download_file(drive_service, work[0], work[1])
     print('Finished. Your files can be found in ' + path)
