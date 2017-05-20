@@ -13,13 +13,15 @@ try:
 except ImportError:
     flags = None
 
-# Before modifying scopes, delete credentialss stored at ~/.credentials/classroom.googleapis.com-python-quickstart.json
-SCOPES = 'https://www.googleapis.com/auth/classroom.coursework.students.readonly', \
-    'https://www.googleapis.com/auth/classroom.courses.readonly', \
-    'https://www.googleapis.com/auth/classroom.coursework.me.readonly', \
-    'https://www.googleapis.com/auth/drive'
+# Before modifying scopes, delete credentials stored at ~/.credentials/classroom.googleapis.com-python-quickstart.json
+SCOPES = ('https://www.googleapis.com/auth/classroom.coursework.students.readonly',
+          'https://www.googleapis.com/auth/classroom.courses.readonly',
+          'https://www.googleapis.com/auth/classroom.coursework.me.readonly',
+          'https://www.googleapis.com/auth/drive',
+          'https://www.googleapis.com/auth/classroom.rosters.readonly')
 CLIENT_SECRET_FILE = 'client_secret.json'
-APPLICATION_NAME = 'Classroom API Python Quickstart'
+APPLICATION_NAME = 'Google Classroom Downloader'
+
 
 def get_credentials():
     """Gets valid user credentials from storage.
@@ -47,26 +49,35 @@ def get_credentials():
             credentials = tools.run(flow, store)
         print('Storing credentials to ' + credential_path)
     return credentials
-    
+
+
+# Takes the class list json output from the API, returns a list of nothing but the class names and their id numbers
 def parse_classes(classes):
     final = []
     classes = classes.get('courses')
     for course in classes:
         final.append([course.get('name'), course.get('id')])
     return final
-    
+
+
+# Takes the assignment list json output, returns a list of assignment titles and id numbers
 def parse_assignments(assignments):
     final = []
     assignments = assignments.get('courseWork')
     for work in assignments:
         final.append([work.get('title'), work.get('id')])
     return final
-    
-def parse_submissions(submissions):
+
+
+# Takes the list of submissions to a single assignment, returns a list of the names of student submitters and a link to
+# the google drive files
+# Can and should be improved to deal with multiple submissions to a single assignment
+def parse_submissions(submissions, classroom_service):
     final = []
     submissions = submissions.get('studentSubmissions')
     for assignment in submissions:
             temp = assignment.get('assignmentSubmission')
+            title = parse_id(assignment.get('userId'), classroom_service)
             if type(temp) is dict:
                 temp = temp.get('attachments')
                 if type(temp) is list:
@@ -74,36 +85,55 @@ def parse_submissions(submissions):
                     if type(temp) is dict:
                         temp = temp.get('driveFile')
                         if type(temp) is dict:
-                            title = parse_name(temp.get('title'))
                             link = parse_link(temp.get('alternateLink'))
                             final.append([title, link])
     return final
     
-def parse_name(name):
-    if '.' in name:
-        ind = name.index('.')
-        return name[:ind]
-    else:
-        return name
 
+# Takes a user id and returns their name in the format [last name, first name]
+def parse_id(user_id, classroom_service):
+    user_profile = classroom_service.userProfiles().get(userId=user_id).execute()
+    name_data = user_profile.get('name')
+    first_name = name_data.get('givenName')
+    last_name = name_data.get('familyName')
+    name = last_name + ', ' + first_name
+    return name
+
+
+# Used by parse_submissions to clean up the drive link
 def parse_link(link):
     if 'id=' in link:
         ind = link.index('id=')
         return link[(ind + 3):]
     else:
         return link
-        
-def download_file(drive_service, name, id):
-#Add way to create student file if there is more than one submission and keep titles as is
-#Add more file type specific endings and implement .export() for google Docs and such
-    type = drive_service.files().get(fileId=id).execute()
-    type = type.get('mimeType')
-    if 'image' in type:
-        name += '.jpg'
-    data = drive_service.files().get_media(fileId=id).execute()
+
+
+# Given a file id and name, downloads the file and names it as such
+# NEEDS WORK
+# Add automatic mime type recognition and file extension addition
+# Add support for docs/slides/sheets files with .export()
+def download_file(drive_service, name, file_id):
+    file_type = drive_service.files().get(fileId=file_id).execute()
+    file_type = file_type.get('mimeType')
+    if 'image' in file_type:
+        if 'gif' in file_type:
+            name += '.gif'
+        else: 
+            name += '.png'
+    elif 'audio' in file_type:
+        name += '.mp3'
+    elif 'video' in file_type:
+        name += '.mp4'
+    elif 'text' in file_type:
+        name += '.txt'
+    elif 'pdf' in file_type:
+        name += '.pdf'
+    data = drive_service.files().get_media(fileId=file_id).execute()
     img = open(name, 'wb')
     img.write(data)
     img.close()
+
 
 def main():
     credentials = get_credentials()
@@ -118,6 +148,7 @@ def main():
     num1 = -1
     courseid = 0
         
+    # Course selection
     while course_select:
         for x in range(len(class_list)):
             print(str(x) + ': ' + str(class_list[x][0]))
@@ -130,6 +161,7 @@ def main():
     num2 = -1
     assignmentid = 0
     
+    # Assignment selection
     while assignment_select:
         for x in range(len(assignment_list)):
             print(str(x) + ': ' + str(assignment_list[x][0]))
@@ -138,6 +170,7 @@ def main():
             assignmentid = assignment_list[num2][1]
             assignment_select = False
 
+    # Creates file with assignment name and navigates there
     path = os.getcwd()
     path += '\\' + class_list[num1][0]
     if not os.path.exists(path):
@@ -146,9 +179,16 @@ def main():
     if not os.path.exists(path):
         os.makedirs(path)
     os.chdir(path)
-    
-    submissions = parse_submissions(classroom_service.courses().courseWork().studentSubmissions().list(courseId=courseid, courseWorkId=assignmentid).execute())
+
+    # Parses list of submissions and downloads all
+    # TAKES THE LONGEST?
+    print('\nParsing submissions...')
+    submissions = parse_submissions(classroom_service.courses()
+                                    .courseWork().studentSubmissions()
+                                    .list(courseId=courseid, courseWorkId=assignmentid).execute(), classroom_service)
     for work in submissions:
+        # Look into making a better loading screen? Percentage instead of notifying when all are done?
+        print('Downloading ' + work[0])
         download_file(drive_service, work[0], work[1])
     print('Finished.')
     
