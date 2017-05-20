@@ -180,7 +180,10 @@ def main():
     # Parses list of submissions and downloads all
     # TAKES THE LONGEST?
     print('\nParsing submissions...')
-    submissions = parse_submissions(classroom_service.courses().courseWork().studentSubmissions().list(courseId=courseid, courseWorkId=assignmentid).execute(), classroom_service)
+    submissions = parse_submissions(classroom_service.courses()
+                                    .courseWork()
+                                    .studentSubmissions()
+                                    .list(courseId=courseid, courseWorkId=assignmentid).execute(), classroom_service)
     for work in submissions:
         # Look into making a better loading screen? Percentage instead of notifying when all are done?
         print('Downloading ' + work[0])
