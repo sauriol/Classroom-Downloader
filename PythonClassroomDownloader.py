@@ -122,15 +122,19 @@ def download_file(drive_service, name, file_id):
         else:
             temp_name = name
 
+        print("Trying to get media...")
         try:
             data = drive_service.files().get_media(fileId=file).execute()
+            print("Success")
         except googleapiclient.errors.HttpError:
-            request = drive_service.files().export_media(fileId=file_id, mimeType='application/pdf')
+            print("Exception hit")
+            request = drive_service.files().export_media(fileId=file, mimeType='application/pdf')
             fh = io.BytesIO()
             downloader = googleapiclient.http.MediaIoBaseDownload(fh, request)
             done = False
             while done is False:
                 status, done = downloader.next_chunk()
+                print("Download %d%%." % int(status.progress() * 100))
         with open(temp_name, "wb") as current_file:
             current_file.write(data)
         file_extension = f.from_file(temp_name).split('/')[1]
