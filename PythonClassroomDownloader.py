@@ -1,6 +1,7 @@
 from __future__ import print_function
 import httplib2
 import os
+import magic
 
 from apiclient import discovery
 from oauth2client import client
@@ -22,6 +23,7 @@ SCOPES = ('https://www.googleapis.com/auth/classroom.coursework.students.readonl
 CLIENT_SECRET_FILE = 'client_secret.json'
 APPLICATION_NAME = 'Google Classroom Downloader'
 
+f = magic.Magic(magic_file="magic.mgc", mime=True)
 
 def get_credentials():
     """Gets valid user credentials from storage.
@@ -114,25 +116,11 @@ def parse_link(link):
 # Add automatic mime type recognition and file extension addition
 # Add support for docs/slides/sheets files with .export()
 def download_file(drive_service, name, file_id):
-    file_type = drive_service.files().get(fileId=file_id).execute()
-    file_type = file_type.get('mimeType')
-    if 'image' in file_type:
-        if 'gif' in file_type:
-            name += '.gif'
-        else: 
-            name += '.png'
-    elif 'audio' in file_type:
-        name += '.mp3'
-    elif 'video' in file_type:
-        name += '.mp4'
-    elif 'text' in file_type:
-        name += '.txt'
-    elif 'pdf' in file_type:
-        name += '.pdf'
     data = drive_service.files().get_media(fileId=file_id).execute()
-    img = open(name, 'wb')
-    img.write(data)
-    img.close()
+    with open(name, "wb") as img:
+        img.write(data)
+    extension = f.from_file(name).split('/')[1]
+    os.rename(name, f"{name}.{extension}")
 
 
 def main():
@@ -186,6 +174,7 @@ def main():
     submissions = parse_submissions(classroom_service.courses()
                                     .courseWork().studentSubmissions()
                                     .list(courseId=courseid, courseWorkId=assignmentid).execute(), classroom_service)
+    print(submissions)
     for work in submissions:
         # Look into making a better loading screen? Percentage instead of notifying when all are done?
         print('Downloading ' + work[0])
