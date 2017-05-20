@@ -25,6 +25,7 @@ APPLICATION_NAME = 'Classroom API Python Quickstart'
 
 f = magic.Magic(magic_file="magic.mgc", mime=True)
 
+
 def get_credentials():
     """Gets valid user credentials from storage.
 
