@@ -120,14 +120,11 @@ def download_file(drive_service, name, file_id):
             temp_name = name + ' ' + str(counter)
         else:
             temp_name = name
-<<<<<<< HEAD
-=======
 
->>>>>>> 734e2a109f5dd9e40f79b1c2924030c7f46b0a40
         try:
             data = drive_service.files().get_media(fileId=file).execute()
         except googleapiclient.errors.HttpError:
-            request = drive_service.files().export_media(fileId=file_id, mimeType='application/pdf')
+            request = drive_service.files().export_media(fileId=file, mimeType='application/pdf')
             fh = io.BytesIO()
             downloader = googleapiclient.http.MediaIoBaseDownload(fh, request)
             done = False
