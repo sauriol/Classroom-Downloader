@@ -125,9 +125,10 @@ def download_file(drive_service, name, file_id):
             temp_name = name
 
         data = drive_service.files().get_media(fileId=file).execute()
-        file_extension = f.from_file(temp_name).split('/')[1]
-        with open(f"{temp_name}.{file_extension}", "wb") as current_file:
+        with open(temp_name, "wb") as current_file:
             current_file.write(data)
+        file_extension = f.from_file(temp_name).split('/')[1]
+        os.rename(temp_name, f"{temp_name}.{file_extension}")
         counter += 1
 
 
