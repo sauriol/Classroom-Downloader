@@ -28,10 +28,8 @@ f = magic.Magic(magic_file="magic.mgc", mime=True)
 
 def get_credentials():
     """Gets valid user credentials from storage.
-
     If nothing has been stored, or if the stored credentials are invalid,
     the OAuth2 flow is completed to obtain the new credentials.
-
     Returns:
         Credentials, the obtained credential.
     """
@@ -75,10 +73,11 @@ def parse_assignments(assignments):
 # Takes the list of submissions to a single assignment, returns a list of the names of student submitters and a link to
 # the google drive files
 # Can and should be improved to deal with multiple submissions to a single assignment
-def parse_submissions(submissions):
+def parse_submissions(submissions, classroom_service):
     final = []
     submissions = submissions.get('studentSubmissions')
     for assignment in submissions:
+        name = parse_id(assignment.get('userId'), classroom_service)
         temp = assignment.get('assignmentSubmission')
         if temp:
             temp = temp.get('attachments')
@@ -87,9 +86,8 @@ def parse_submissions(submissions):
                 if temp:
                     temp = temp.get('driveFile')
                     if temp:
-                        title = parse_name(temp.get('title'))
                         link = parse_link(temp.get('alternateLink'))
-                        final.append([title, link])
+                        final.append([name, link])
     return final
     
 
