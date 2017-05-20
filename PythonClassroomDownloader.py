@@ -1,18 +1,18 @@
 from __future__ import print_function
 import httplib2
 import os
+import io
 import magic
+
+import googleapiclient.http
+import googleapiclient.errors
 
 from apiclient import discovery
 from oauth2client import client
 from oauth2client import tools
 from oauth2client.file import Storage
 
-try:
-    import argparse
-    flags = argparse.ArgumentParser(parents=[tools.argparser]).parse_args()
-except ImportError:
-    flags = None
+flags = None
 
 # Before modifying scopes, delete credentials stored at ~/.credentials/classroom.googleapis.com-python-quickstart.json
 SCOPES = 'https://www.googleapis.com/auth/classroom.coursework.students.readonly', \
@@ -74,7 +74,6 @@ def parse_assignments(assignments):
 # the google drive files
 # Can and should be improved to deal with multiple submissions to a single assignment
 def parse_submissions(submissions, classroom_service):
-    def parse_submissions(submissions, classroom_service):
     final = []
     submissions = submissions.get('studentSubmissions')
     for assignment in submissions:
@@ -125,7 +124,15 @@ def download_file(drive_service, name, file_id):
             temp_name = name
 
         print('file =', file)
-        data = drive_service.files().get_media(fileId=file).execute()
+        try:
+            data = drive_service.files().get_media(fileId=file).execute()
+        except googleapiclient.errors.HttpError:
+            request = drive_service.files().export_media(fileId=file_id, mimeType='application/pdf')
+            fh = io.BytesIO()
+            downloader = googleapiclient.http.MediaIoBaseDownload(fh, request)
+            done = False
+            while done is False:
+                status, done = downloader.next_chunk()
         with open(temp_name, "wb") as current_file:
             current_file.write(data)
         file_extension = f.from_file(temp_name).split('/')[1]
