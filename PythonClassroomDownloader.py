@@ -75,19 +75,21 @@ def parse_assignments(assignments):
 # Takes the list of submissions to a single assignment, returns a list of the names of student submitters and a link to
 # the google drive files
 # Can and should be improved to deal with multiple submissions to a single assignment
-def parse_submissions(submissions, classroom_service):
+def parse_submissions(submissions):
     final = []
     submissions = submissions.get('studentSubmissions')
     for assignment in submissions:
-        link = []
         temp = assignment.get('assignmentSubmission')
-        title = parse_id(assignment.get('userId'), classroom_service)
-        if type(temp) is dict:
+        if temp:
             temp = temp.get('attachments')
             if temp:
-                for driveFile in temp:
-                    link.append(parse_link(driveFile.get('driveFile').get('alternateLink')))
-        final.append([title, link])
+                temp = temp[0]
+                if temp:
+                    temp = temp.get('driveFile')
+                    if temp:
+                        title = parse_name(temp.get('title'))
+                        link = parse_link(temp.get('alternateLink'))
+                        final.append([title, link])
     return final
     
 
