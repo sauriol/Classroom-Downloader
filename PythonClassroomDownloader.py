@@ -1,6 +1,7 @@
 from __future__ import print_function
 import httplib2
 import os
+import magic
 
 from apiclient import discovery
 from oauth2client import client
@@ -22,6 +23,7 @@ SCOPES = 'https://www.googleapis.com/auth/classroom.coursework.students.readonly
 CLIENT_SECRET_FILE = 'client_secret.json'
 APPLICATION_NAME = 'Classroom API Python Quickstart'
 
+f = magic.Magic(magic_file="magic.mgc", mime=True)
 
 def get_credentials():
     """Gets valid user credentials from storage.
@@ -88,8 +90,8 @@ def parse_submissions(submissions, classroom_service):
     
 
 # Takes a user id and returns their name in the format [last name, first name]
-def parse_id(id, classroom_service):
-    user_profile = classroom_service.userProfiles().get(userId=id).execute()
+def parse_id(user_id, classroom_service):
+    user_profile = classroom_service.userProfiles().get(userId=user_id).execute()
     name_data = user_profile.get('name')
     first_name = name_data.get('givenName')
     last_name = name_data.get('familyName')
@@ -110,32 +112,18 @@ def parse_link(link):
 # NEEDS WORK
 # Add automatic mime type recognition and file extension addition
 # Add support for docs/slides/sheets files with .export()
-def download_file(drive_service, name, id):
+def download_file(drive_service, name, file_id):
     counter = 1
-    for file in id: 
-        type = drive_service.files().get(fileId=file).execute()
-        type = type.get('mimeType')
-        if len(id) > 1:
-            tempName = name + ' ' + str(counter)
+    for file in file_id:
+        if len(file_id) > 1:
+            temp_name = name + ' ' + str(counter)
         else:
-            tempName = name
-        if 'image' in type:
-            if 'gif' in type:
-                tempName += '.gif'
-            else: 
-                tempName += '.png'
-        elif 'audio' in type:
-            tempName += '.mp3'
-        elif 'video' in type:
-            tempName += '.mp4'
-        elif 'text' in type:
-            tempName += '.txt'
-        elif 'pdf' in type:
-            tempName += '.pdf'
+            temp_name = name
+
         data = drive_service.files().get_media(fileId=file).execute()
-        img = open(tempName, 'wb')
-        img.write(data)
-        img.close()
+        file_extension = f.from_file(temp_name).split('/')[1]
+        with open(f"{temp_name}.{file_extension}", "wb") as current_file:
+            current_file.write(data)
         counter += 1
 
 
