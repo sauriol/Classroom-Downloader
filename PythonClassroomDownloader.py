@@ -1,18 +1,18 @@
 from __future__ import print_function
 import httplib2
 import os
+import io
 import magic
+
+import googleapiclient.http
+import googleapiclient.errors
 
 from apiclient import discovery
 from oauth2client import client
 from oauth2client import tools
 from oauth2client.file import Storage
 
-try:
-    import argparse
-    flags = argparse.ArgumentParser(parents=[tools.argparser]).parse_args()
-except ImportError:
-    flags = None
+flags = None
 
 # Before modifying scopes, delete credentials stored at ~/.credentials/classroom.googleapis.com-python-quickstart.json
 SCOPES = 'https://www.googleapis.com/auth/classroom.coursework.students.readonly', \
@@ -120,6 +120,10 @@ def download_file(drive_service, name, file_id):
             temp_name = name + ' ' + str(counter)
         else:
             temp_name = name
+<<<<<<< HEAD
+=======
+
+>>>>>>> 734e2a109f5dd9e40f79b1c2924030c7f46b0a40
         try:
             data = drive_service.files().get_media(fileId=file).execute()
         except googleapiclient.errors.HttpError:
