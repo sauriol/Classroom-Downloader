@@ -14,13 +14,13 @@ except ImportError:
     flags = None
 
 # Before modifying scopes, delete credentials stored at ~/.credentials/classroom.googleapis.com-python-quickstart.json
-SCOPES = ('https://www.googleapis.com/auth/classroom.coursework.students.readonly',
-          'https://www.googleapis.com/auth/classroom.courses.readonly',
-          'https://www.googleapis.com/auth/classroom.coursework.me.readonly',
-          'https://www.googleapis.com/auth/drive',
-          'https://www.googleapis.com/auth/classroom.rosters.readonly')
+SCOPES = 'https://www.googleapis.com/auth/classroom.coursework.students.readonly', \
+    'https://www.googleapis.com/auth/classroom.courses.readonly', \
+    'https://www.googleapis.com/auth/classroom.coursework.me.readonly', \
+    'https://www.googleapis.com/auth/drive', \
+    'https://www.googleapis.com/auth/classroom.rosters.readonly'
 CLIENT_SECRET_FILE = 'client_secret.json'
-APPLICATION_NAME = 'Google Classroom Downloader'
+APPLICATION_NAME = 'Classroom API Python Quickstart'
 
 
 def get_credentials():
@@ -51,7 +51,7 @@ def get_credentials():
     return credentials
 
 
-# Takes the class list json output from the API, returns a list of nothing but the class names and their id numbers
+#Takes the class list json output from the API, returns a list of nothing but the class names and their id numbers
 def parse_classes(classes):
     final = []
     classes = classes.get('courses')
@@ -60,7 +60,7 @@ def parse_classes(classes):
     return final
 
 
-# Takes the assignment list json output, returns a list of assignment titles and id numbers
+#Takes the assignment list json output, returns a list of assignment titles and id numbers
 def parse_assignments(assignments):
     final = []
     assignments = assignments.get('courseWork')
@@ -69,30 +69,26 @@ def parse_assignments(assignments):
     return final
 
 
-# Takes the list of submissions to a single assignment, returns a list of the names of student submitters and a link to
-# the google drive files
-# Can and should be improved to deal with multiple submissions to a single assignment
+#Takes the list of submissions to a single assignment, returns a list of the names of student submitters and a link to the google drive files
+#Can and should be improved to deal with multiple submissions to a single assignment
 def parse_submissions(submissions, classroom_service):
     final = []
     submissions = submissions.get('studentSubmissions')
     for assignment in submissions:
-            temp = assignment.get('assignmentSubmission')
-            title = parse_id(assignment.get('userId'), classroom_service)
-            if type(temp) is dict:
-                temp = temp.get('attachments')
-                if type(temp) is list:
-                    temp = temp[0]
-                    if type(temp) is dict:
-                        temp = temp.get('driveFile')
-                        if type(temp) is dict:
-                            link = parse_link(temp.get('alternateLink'))
-                            final.append([title, link])
+        link = []
+        temp = assignment.get('assignmentSubmission')
+        title = parse_id(assignment.get('userId'), classroom_service)
+        if type(temp) is dict:
+            temp = temp.get('attachments')
+            for driveFile in temp:
+                link.append(parse_link(driveFile.get('driveFile').get('alternateLink')))
+        final.append([title, link])
     return final
     
 
-# Takes a user id and returns their name in the format [last name, first name]
-def parse_id(user_id, classroom_service):
-    user_profile = classroom_service.userProfiles().get(userId=user_id).execute()
+#Takes a user id and returns their name in the format [last name, first name]
+def parse_id(id, classroom_service):
+    user_profile = classroom_service.userProfiles().get(userId=id).execute()
     name_data = user_profile.get('name')
     first_name = name_data.get('givenName')
     last_name = name_data.get('familyName')
@@ -100,7 +96,7 @@ def parse_id(user_id, classroom_service):
     return name
 
 
-# Used by parse_submissions to clean up the drive link
+#Used by parse_submissions to clean up the drive link
 def parse_link(link):
     if 'id=' in link:
         ind = link.index('id=')
@@ -109,30 +105,37 @@ def parse_link(link):
         return link
 
 
-# Given a file id and name, downloads the file and names it as such
-# NEEDS WORK
-# Add automatic mime type recognition and file extension addition
-# Add support for docs/slides/sheets files with .export()
-def download_file(drive_service, name, file_id):
-    file_type = drive_service.files().get(fileId=file_id).execute()
-    file_type = file_type.get('mimeType')
-    if 'image' in file_type:
-        if 'gif' in file_type:
-            name += '.gif'
-        else: 
-            name += '.png'
-    elif 'audio' in file_type:
-        name += '.mp3'
-    elif 'video' in file_type:
-        name += '.mp4'
-    elif 'text' in file_type:
-        name += '.txt'
-    elif 'pdf' in file_type:
-        name += '.pdf'
-    data = drive_service.files().get_media(fileId=file_id).execute()
-    img = open(name, 'wb')
-    img.write(data)
-    img.close()
+#Given a file id and name, downloads the file and names it as such
+#NEEDS WORK
+#Add automatic mime type recognition and file extension addition
+#Add support for docs/slides/sheets files with .export()
+def download_file(drive_service, name, id):
+    counter = 1
+    for file in id: 
+        type = drive_service.files().get(fileId=file).execute()
+        type = type.get('mimeType')
+        if len(id) > 1:
+            tempName = name + ' ' + str(counter)
+        else:
+            tempName = name
+        if 'image' in type:
+            if 'gif' in type:
+                tempName += '.gif'
+            else: 
+                tempName += '.png'
+        elif 'audio' in type:
+            tempName += '.mp3'
+        elif 'video' in type:
+            tempName += '.mp4'
+        elif 'text' in type:
+            tempName += '.txt'
+        elif 'pdf' in type:
+            tempName += '.pdf'
+        data = drive_service.files().get_media(fileId=file).execute()
+        img = open(tempName, 'wb')
+        img.write(data)
+        img.close()
+        counter += 1
 
 
 def main():
@@ -148,7 +151,7 @@ def main():
     num1 = -1
     courseid = 0
         
-    # Course selection
+    #Course selection
     while course_select:
         for x in range(len(class_list)):
             print(str(x) + ': ' + str(class_list[x][0]))
@@ -161,7 +164,7 @@ def main():
     num2 = -1
     assignmentid = 0
     
-    # Assignment selection
+    #Assignment selection
     while assignment_select:
         for x in range(len(assignment_list)):
             print(str(x) + ': ' + str(assignment_list[x][0]))
@@ -170,7 +173,7 @@ def main():
             assignmentid = assignment_list[num2][1]
             assignment_select = False
 
-    # Creates file with assignment name and navigates there
+    #Creates file with assignment name and navigates there
     path = os.getcwd()
     path += '\\' + class_list[num1][0]
     if not os.path.exists(path):
@@ -180,17 +183,15 @@ def main():
         os.makedirs(path)
     os.chdir(path)
 
-    # Parses list of submissions and downloads all
-    # TAKES THE LONGEST?
+    #Parses list of submissions and downloads all
+    #TAKES THE LONGEST?
     print('\nParsing submissions...')
-    submissions = parse_submissions(classroom_service.courses()
-                                    .courseWork().studentSubmissions()
-                                    .list(courseId=courseid, courseWorkId=assignmentid).execute(), classroom_service)
+    submissions = parse_submissions(classroom_service.courses().courseWork().studentSubmissions().list(courseId=courseid, courseWorkId=assignmentid).execute(), classroom_service)
     for work in submissions:
-        # Look into making a better loading screen? Percentage instead of notifying when all are done?
+    #Look into making a better loading screen? Percentage instead of notifying when all are done?
         print('Downloading ' + work[0])
         download_file(drive_service, work[0], work[1])
-    print('Finished.')
+    print('Finished. Your files can be found in ' + path)
     
 if __name__ == '__main__':
     main()
