@@ -82,9 +82,8 @@ def parse_submissions(submissions, classroom_service):
         temp = assignment.get('assignmentSubmission')
         try:
             temp = temp.get('attachments')
-            temp = temp[0]
-            temp = temp.get('driveFile')
-            link.append(parse_link(temp.get('alternateLink')))
+            for driveFile in temp:
+                link.append(parse_link(temp.get('driveFile').get('alternateLink')))
             final.append([name, link])
         except (AttributeError, TypeError):
             pass
@@ -121,20 +120,19 @@ def download_file(drive_service, name, file_id):
             temp_name = name + ' ' + str(counter)
         else:
             temp_name = name
+<<<<<<< HEAD
+=======
 
-        print("Trying to get media...")
+>>>>>>> 734e2a109f5dd9e40f79b1c2924030c7f46b0a40
         try:
             data = drive_service.files().get_media(fileId=file).execute()
-            print("Success")
         except googleapiclient.errors.HttpError:
-            print("Exception hit")
-            request = drive_service.files().export_media(fileId=file, mimeType='application/pdf')
+            request = drive_service.files().export_media(fileId=file_id, mimeType='application/pdf')
             fh = io.BytesIO()
             downloader = googleapiclient.http.MediaIoBaseDownload(fh, request)
             done = False
             while done is False:
                 status, done = downloader.next_chunk()
-                print("Download %d%%." % int(status.progress() * 100))
         with open(temp_name, "wb") as current_file:
             current_file.write(data)
         file_extension = f.from_file(temp_name).split('/')[1]
@@ -160,7 +158,7 @@ def main():
         for x in range(len(class_list)):
             print(str(x) + ': ' + str(class_list[x][0]))
         num1 = int(input('\nEnter the corresponding number for a class: '))
-        if (num1 >= 0) and (num1 < len(class_list)):
+        if (num1 >= 0) and (num1 <= len(class_list)):
             courseid = class_list[num1][1]
             course_select = False
     
@@ -173,7 +171,7 @@ def main():
         for x in range(len(assignment_list)):
             print(str(x) + ': ' + str(assignment_list[x][0]))
         num2 = int(input('\nEnter the corresponding number for an assignment: '))
-        if (num2 >= 0) and (num2 < len(class_list)):
+        if (num2 >= 0) and (num2 <= len(class_list)):
             assignmentid = assignment_list[num2][1]
             assignment_select = False
 
@@ -195,7 +193,6 @@ def main():
                                     .studentSubmissions()
                                     .list(courseId=courseid, courseWorkId=assignmentid).execute(), classroom_service)
     for work in submissions:
-        # Look into making a better loading screen? Percentage instead of notifying when all are done?
         print('Downloading ' + work[0])
         download_file(drive_service, work[0], work[1])
     print('Finished. Your files can be found in ' + path)
