@@ -116,14 +116,12 @@ def parse_link(link):
 # Add support for docs/slides/sheets files with .export()
 def download_file(drive_service, name, file_id):
     counter = 1
-    print('file_id =', file_id)
     for file in file_id:
         if len(file_id) > 1:
             temp_name = name + ' ' + str(counter)
         else:
             temp_name = name
 
-        print('file =', file)
         try:
             data = drive_service.files().get_media(fileId=file).execute()
         except googleapiclient.errors.HttpError:
