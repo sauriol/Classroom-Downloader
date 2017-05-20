@@ -51,7 +51,7 @@ def get_credentials():
     return credentials
 
 
-#Takes the class list json output from the API, returns a list of nothing but the class names and their id numbers
+# Takes the class list json output from the API, returns a list of nothing but the class names and their id numbers
 def parse_classes(classes):
     final = []
     classes = classes.get('courses')
@@ -60,7 +60,7 @@ def parse_classes(classes):
     return final
 
 
-#Takes the assignment list json output, returns a list of assignment titles and id numbers
+# Takes the assignment list json output, returns a list of assignment titles and id numbers
 def parse_assignments(assignments):
     final = []
     assignments = assignments.get('courseWork')
@@ -69,8 +69,9 @@ def parse_assignments(assignments):
     return final
 
 
-#Takes the list of submissions to a single assignment, returns a list of the names of student submitters and a link to the google drive files
-#Can and should be improved to deal with multiple submissions to a single assignment
+# Takes the list of submissions to a single assignment, returns a list of the names of student submitters and a link to
+# the google drive files
+# Can and should be improved to deal with multiple submissions to a single assignment
 def parse_submissions(submissions, classroom_service):
     final = []
     submissions = submissions.get('studentSubmissions')
@@ -86,7 +87,7 @@ def parse_submissions(submissions, classroom_service):
     return final
     
 
-#Takes a user id and returns their name in the format [last name, first name]
+# Takes a user id and returns their name in the format [last name, first name]
 def parse_id(id, classroom_service):
     user_profile = classroom_service.userProfiles().get(userId=id).execute()
     name_data = user_profile.get('name')
@@ -96,7 +97,7 @@ def parse_id(id, classroom_service):
     return name
 
 
-#Used by parse_submissions to clean up the drive link
+# Used by parse_submissions to clean up the drive link
 def parse_link(link):
     if 'id=' in link:
         ind = link.index('id=')
@@ -105,10 +106,10 @@ def parse_link(link):
         return link
 
 
-#Given a file id and name, downloads the file and names it as such
-#NEEDS WORK
-#Add automatic mime type recognition and file extension addition
-#Add support for docs/slides/sheets files with .export()
+# Given a file id and name, downloads the file and names it as such
+# NEEDS WORK
+# Add automatic mime type recognition and file extension addition
+# Add support for docs/slides/sheets files with .export()
 def download_file(drive_service, name, id):
     counter = 1
     for file in id: 
@@ -151,7 +152,7 @@ def main():
     num1 = -1
     courseid = 0
         
-    #Course selection
+    # Course selection
     while course_select:
         for x in range(len(class_list)):
             print(str(x) + ': ' + str(class_list[x][0]))
@@ -164,7 +165,7 @@ def main():
     num2 = -1
     assignmentid = 0
     
-    #Assignment selection
+    # Assignment selection
     while assignment_select:
         for x in range(len(assignment_list)):
             print(str(x) + ': ' + str(assignment_list[x][0]))
@@ -173,7 +174,7 @@ def main():
             assignmentid = assignment_list[num2][1]
             assignment_select = False
 
-    #Creates file with assignment name and navigates there
+    # Creates file with assignment name and navigates there
     path = os.getcwd()
     path += '\\' + class_list[num1][0]
     if not os.path.exists(path):
@@ -183,12 +184,12 @@ def main():
         os.makedirs(path)
     os.chdir(path)
 
-    #Parses list of submissions and downloads all
-    #TAKES THE LONGEST?
+    # Parses list of submissions and downloads all
+    # TAKES THE LONGEST?
     print('\nParsing submissions...')
     submissions = parse_submissions(classroom_service.courses().courseWork().studentSubmissions().list(courseId=courseid, courseWorkId=assignmentid).execute(), classroom_service)
     for work in submissions:
-    #Look into making a better loading screen? Percentage instead of notifying when all are done?
+    # Look into making a better loading screen? Percentage instead of notifying when all are done?
         print('Downloading ' + work[0])
         download_file(drive_service, work[0], work[1])
     print('Finished. Your files can be found in ' + path)
