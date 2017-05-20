@@ -77,6 +77,7 @@ def parse_submissions(submissions, classroom_service):
     final = []
     submissions = submissions.get('studentSubmissions')
     for assignment in submissions:
+        link = []
         name = parse_id(assignment.get('userId'), classroom_service)
         temp = assignment.get('assignmentSubmission')
         if temp:
@@ -86,8 +87,9 @@ def parse_submissions(submissions, classroom_service):
                 if temp:
                     temp = temp.get('driveFile')
                     if temp:
-                        link = parse_link(temp.get('alternateLink'))
+                        link.append(parse_link(temp.get('alternateLink')))
                         final.append([name, link])
+    print(final)
     return final
     
 
@@ -116,17 +118,19 @@ def parse_link(link):
 # Add support for docs/slides/sheets files with .export()
 def download_file(drive_service, name, file_id):
     counter = 1
+    print('file_id =', file_id)
     for file in file_id:
         if len(file_id) > 1:
             temp_name = name + ' ' + str(counter)
         else:
             temp_name = name
 
+        print('file =', file)
         data = drive_service.files().get_media(fileId=file).execute()
         with open(temp_name, "wb") as current_file:
             current_file.write(data)
         file_extension = f.from_file(temp_name).split('/')[1]
-        os.rename(temp_name, f"{temp_name}.{file_extension}")
+        os.rename(temp_name, f'{temp_name}.{file_extension}')
         counter += 1
 
 
