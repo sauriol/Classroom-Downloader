@@ -80,8 +80,9 @@ def parse_submissions(submissions, classroom_service):
         link = []
         name = parse_id(assignment.get('userId'), classroom_service)
         temp = assignment.get('assignmentSubmission')
-        if temp:
+        try:
             temp = temp.get('attachments')
+<<<<<<< HEAD
             if temp:
                 temp = temp[0]
                 if temp:
@@ -90,6 +91,14 @@ def parse_submissions(submissions, classroom_service):
                         link.append(parse_link(temp.get('alternateLink')))
                         final.append([name, link])
     print(final)
+=======
+            temp = temp[0]
+            temp = temp.get('driveFile')
+            link = parse_link(temp.get('alternateLink'))
+            final.append([name, link])
+        except (AttributeError, TypeError):
+            pass
+>>>>>>> origin/master
     return final
     
 
@@ -186,6 +195,7 @@ def main():
                                     .courseWork()
                                     .studentSubmissions()
                                     .list(courseId=courseid, courseWorkId=assignmentid).execute(), classroom_service)
+    print(submissions)
     for work in submissions:
         # Look into making a better loading screen? Percentage instead of notifying when all are done?
         print('Downloading ' + work[0])
