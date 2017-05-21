@@ -44,10 +44,7 @@ def get_credentials():
     if not credentials or credentials.invalid:
         flow = client.flow_from_clientsecrets(CLIENT_SECRET_FILE, SCOPES)
         flow.user_agent = APPLICATION_NAME
-        if flags:
-            credentials = tools.run_flow(flow, store, flags)
-        else: # Needed only for compatibility with Python 2.6
-            credentials = tools.run(flow, store)
+        credentials = tools.run_flow(flow, store, flags)
         print('Storing credentials to ' + credential_path)
     return credentials
 
@@ -83,7 +80,7 @@ def parse_submissions(submissions, classroom_service):
         try:
             temp = temp.get('attachments')
             for driveFile in temp:
-                link.append(parse_link(temp.get('driveFile').get('alternateLink')))
+                link.append(parse_link(driveFile.get('driveFile').get('alternateLink')))
             final.append([name, link])
         except (AttributeError, TypeError):
             pass
@@ -189,6 +186,7 @@ def main():
                                     .courseWork()
                                     .studentSubmissions()
                                     .list(courseId=courseid, courseWorkId=assignmentid).execute(), classroom_service)
+    print(submissions)
     for work in submissions:
         print('Downloading ' + work[0])
         download_file(drive_service, work[0], work[1])
