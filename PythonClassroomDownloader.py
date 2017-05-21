@@ -69,7 +69,6 @@ def parse_assignments(assignments):
 
 # Takes the list of submissions to a single assignment, returns a list of the names of student submitters and a link to
 # the google drive files
-# Can and should be improved to deal with multiple submissions to a single assignment
 def parse_submissions(submissions, classroom_service):
     final = []
     submissions = submissions.get('studentSubmissions')
@@ -107,30 +106,24 @@ def parse_link(link):
 
 
 # Given a file id and name, downloads the file and names it as such
-# NEEDS WORK
-# Add automatic mime type recognition and file extension addition
-# Add support for docs/slides/sheets files with .export()
 def download_file(drive_service, name, file_id):
     counter = 1
     for file in file_id:
+        drive = True
         if len(file_id) > 1:
             temp_name = name + ' ' + str(counter)
         else:
             temp_name = name
-
         try:
             data = drive_service.files().get_media(fileId=file).execute()
-            with open(temp_name, "wb") as current_file:
-                current_file.write(data)
-            file_extension = f.from_file(temp_name).split('/')[1]
-            os.rename(temp_name, f'{temp_name}.{file_extension}')
+            if data:
+                drive = False
         except googleapiclient.errors.HttpError:
-            request = drive_service.files().export_media(fileId=file, mimeType='application/pdf')
-            fh = io.FileIO(temp_name + ".pdf", mode="wb")
-            downloader = googleapiclient.http.MediaIoBaseDownload(fh, request)
-            done = False
-            while done is False:
-                status, done = downloader.next_chunk()
+            data = drive_service.files().export(fileId=file, mimeType='application/pdf').execute()
+        with open(temp_name, "wb") as current_file:
+            current_file.write(data)
+        file_extension = f.from_file(temp_name).split('/')[1]
+        os.rename(temp_name, f'{temp_name}.{file_extension}')
         counter += 1
 
 
@@ -180,13 +173,11 @@ def main():
     os.chdir(path)
 
     # Parses list of submissions and downloads all
-    # TAKES THE LONGEST?
     print('\nParsing submissions...')
     submissions = parse_submissions(classroom_service.courses()
                                     .courseWork()
                                     .studentSubmissions()
                                     .list(courseId=courseid, courseWorkId=assignmentid).execute(), classroom_service)
-    print(submissions)
     for work in submissions:
         print('Downloading ' + work[0])
         download_file(drive_service, work[0], work[1])
