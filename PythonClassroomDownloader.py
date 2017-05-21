@@ -113,24 +113,21 @@ def parse_link(link):
 def download_file(drive_service, name, file_id):
     counter = 1
     for file in file_id:
+        drive = True
         if len(file_id) > 1:
             temp_name = name + ' ' + str(counter)
         else:
             temp_name = name
-
         try:
             data = drive_service.files().get_media(fileId=file).execute()
-            with open(temp_name, "wb") as current_file:
-                current_file.write(data)
-            file_extension = f.from_file(temp_name).split('/')[1]
-            os.rename(temp_name, f'{temp_name}.{file_extension}')
+            if data:
+                drive = False
         except googleapiclient.errors.HttpError:
-            request = drive_service.files().export_media(fileId=file, mimeType='application/pdf')
-            fh = io.FileIO(temp_name + ".pdf", mode="wb")
-            downloader = googleapiclient.http.MediaIoBaseDownload(fh, request)
-            done = False
-            while done is False:
-                status, done = downloader.next_chunk()
+            data = drive_service.files().export(fileId=file, mimeType='application/pdf').execute()
+        with open(temp_name, "wb") as current_file:
+            current_file.write(data)
+        file_extension = f.from_file(temp_name).split('/')[1]
+        os.rename(temp_name, f'{temp_name}.{file_extension}')
         counter += 1
 
 
@@ -186,7 +183,6 @@ def main():
                                     .courseWork()
                                     .studentSubmissions()
                                     .list(courseId=courseid, courseWorkId=assignmentid).execute(), classroom_service)
-    print(submissions)
     for work in submissions:
         print('Downloading ' + work[0])
         download_file(drive_service, work[0], work[1])
