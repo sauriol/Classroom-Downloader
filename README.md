@@ -2,7 +2,7 @@
 Downloads all submissions to an assignment from classroom.
 
 ## Current State:
-* Downloads ~~only image files~~ anand names them using the student name 
+* Downloads ~~only image files~~ and names them using the student name 
 * ~~Has no special way to handle multiple submissions or non-image files~~
 
 ## To be done:
