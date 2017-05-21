@@ -23,15 +23,6 @@ APPLICATION_NAME = 'Classroom API Python Quickstart'
 
 with open("settings.json") as settings:
     type_conversions = json.load(settings)
-default_extensions = {
-    "text/plain": "txt",
-    "image/jpeg": "jpg",
-    "image/png": "png",
-    "image/gif": "gif",
-    "audio/mpeg": "mp3",
-    "audio/ogg": "ogg",
-    "video/mpeg-4": "mp4"
-}
 
 
 def get_credentials():
@@ -117,7 +108,8 @@ def parse_link(link):
 def download_file(drive_service, name, file_id):
     counter = 1
     for file in file_id:
-        file_type = drive_service.files().get(fileId=file).execute().get("mimeType")
+        file_metadata = drive_service.files().get(fileId=file).execute()
+        file_type = file_metadata["mimeType"]
 
         if len(file_id) > 1:
             temp_name = name + ' ' + str(counter)
@@ -134,7 +126,7 @@ def download_file(drive_service, name, file_id):
         if file_type in type_conversions:
             file_extension = type_conversions[file_type][1]
         else:
-            file_extension = default_extensions.get(file_type)
+            file_extension = file_metadata["name"].split('.')[-1]
         os.rename(temp_name, f'{temp_name}.{file_extension}')
         counter += 1
 
