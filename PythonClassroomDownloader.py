@@ -1,8 +1,6 @@
-from __future__ import print_function
 import httplib2
 import os
 import json
-import magic
 
 import googleapiclient.http
 import googleapiclient.errors
@@ -23,7 +21,6 @@ SCOPES = 'https://www.googleapis.com/auth/classroom.coursework.students.readonly
 CLIENT_SECRET_FILE = 'client_secret.json'
 APPLICATION_NAME = 'Classroom API Python Quickstart'
 
-f = magic.Magic(magic_file="magic.mgc", mime=True)
 with open("settings.json") as settings:
     type_conversions = json.load(settings)
 default_extensions = {
