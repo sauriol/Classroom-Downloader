@@ -1,7 +1,7 @@
 from __future__ import print_function
 import httplib2
 import os
-import io
+import json
 import magic
 
 import googleapiclient.http
@@ -24,6 +24,16 @@ CLIENT_SECRET_FILE = 'client_secret.json'
 APPLICATION_NAME = 'Classroom API Python Quickstart'
 
 f = magic.Magic(magic_file="magic.mgc", mime=True)
+with open("settings.json") as settings:
+    type_conversions = json.load(settings)
+default_extensions = {
+    "text/plain": "txt",
+    "image/jpeg": "jpg",
+    "image/png": "png",
+    "audio/mpeg": "mp3",
+    "audio/ogg": "ogg",
+    "video/mpeg-4": "mp4"
+}
 
 
 def get_credentials():
@@ -109,20 +119,24 @@ def parse_link(link):
 def download_file(drive_service, name, file_id):
     counter = 1
     for file in file_id:
-        drive = True
+        file_type = drive_service.files().get(fileId=file).execute().get("mimeType")
+
         if len(file_id) > 1:
             temp_name = name + ' ' + str(counter)
         else:
             temp_name = name
         try:
             data = drive_service.files().get_media(fileId=file).execute()
-            if data:
-                drive = False
         except googleapiclient.errors.HttpError:
-            data = drive_service.files().export(fileId=file, mimeType='application/pdf').execute()
+            data = drive_service.files().export(fileId=file, mimeType=type_conversions.get(file_type)[0]).execute()
+
         with open(temp_name, "wb") as current_file:
             current_file.write(data)
-        file_extension = f.from_file(temp_name).split('/')[1]
+
+        if file_type in type_conversions:
+            file_extension = type_conversions[file_type][1]
+        else:
+            file_extension = default_extensions.get(file_type)
         os.rename(temp_name, f'{temp_name}.{file_extension}')
         counter += 1
 
@@ -139,7 +153,7 @@ def main():
     class_list = parse_classes(classroom_service.courses().list().execute())
     num1 = -1
     courseid = 0
-        
+
     # Course selection
     while course_select:
         for x in range(len(class_list)):
@@ -158,7 +172,7 @@ def main():
         for x in range(len(assignment_list)):
             print(str(x) + ': ' + str(assignment_list[x][0]))
         num2 = int(input('\nEnter the corresponding number for an assignment: '))
-        if (num2 >= 0) and (num2 <= len(class_list)):
+        if (num2 >= 0) and (num2 <= len(assignment_list[num2])):
             assignmentid = assignment_list[num2][1]
             assignment_select = False
 

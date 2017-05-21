@@ -1,0 +1,14 @@
+{
+  "application/vnd.google-apps.document": [
+    "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+    "doc"
+  ],
+  "application/vnd.google-apps.presentation": [
+    "application/vnd.openxmlformats-officedocument.presentationml.presentation",
+    "ppt"
+  ],
+  "application/vnd.google-apps.sheet": [
+    "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+    "xls"
+  ]
+}
