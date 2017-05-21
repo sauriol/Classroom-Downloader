@@ -6,9 +6,10 @@ Downloads all submissions to an assignment from classroom.
 * Has no special way to handle multiple submissions or non-image files.
 
 ## To be done:
-* Add options for files other than images 
-* If there are multiple submissions, create a file named after the student and place them there, retaining the original file names
-* Add way to download files such as Google Docs or Slides, probably using the .export() function
+* ~~Add options for files other than images~~
+* ~~If there are multiple submissions, create a file named after the student and place them there, retaining the original file names~~
+* ~~Add way to download files such as Google Docs or Slides, probably using the .export() function~~
+* Add options to export as something other than PDF
 
 ## Setup
 1. Go to console.developers.google.com and make sure you are logged in with an account that has Google Apps for Education enabled. Basically, if it's your school issued account or the one you log into Google Classroom with, you're good.
