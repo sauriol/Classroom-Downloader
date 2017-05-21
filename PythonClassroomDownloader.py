@@ -69,7 +69,6 @@ def parse_assignments(assignments):
 
 # Takes the list of submissions to a single assignment, returns a list of the names of student submitters and a link to
 # the google drive files
-# Can and should be improved to deal with multiple submissions to a single assignment
 def parse_submissions(submissions, classroom_service):
     final = []
     submissions = submissions.get('studentSubmissions')
@@ -107,9 +106,6 @@ def parse_link(link):
 
 
 # Given a file id and name, downloads the file and names it as such
-# NEEDS WORK
-# Add automatic mime type recognition and file extension addition
-# Add support for docs/slides/sheets files with .export()
 def download_file(drive_service, name, file_id):
     counter = 1
     for file in file_id:
@@ -177,7 +173,6 @@ def main():
     os.chdir(path)
 
     # Parses list of submissions and downloads all
-    # TAKES THE LONGEST?
     print('\nParsing submissions...')
     submissions = parse_submissions(classroom_service.courses()
                                     .courseWork()
