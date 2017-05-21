@@ -1,5 +1,5 @@
 # Classroom-Downloader
-Downloads all submissions to an assignment from classroom.
+Downloads all submissions to an assignment from Google Classroom.
 
 ## Current State:
 * Downloads ~~only image files~~ and names them using the student name 
