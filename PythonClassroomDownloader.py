@@ -30,6 +30,7 @@ default_extensions = {
     "text/plain": "txt",
     "image/jpeg": "jpg",
     "image/png": "png",
+    "image/gif": "gif",
     "audio/mpeg": "mp3",
     "audio/ogg": "ogg",
     "video/mpeg-4": "mp4"
